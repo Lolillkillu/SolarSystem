@@ -1,0 +1,503 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<title>Szymon Sikora Solar system / mirror sphere skybox x2</title>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+	<link rel=stylesheet href="css/base.css"/>
+</head>
+<body>
+
+<script src="three.js"></script>
+<script src="ParametricGeometries.js"></script>
+
+<script src="Detector.js"></script>
+<script src="stats.js"></script>
+<script src="OrbitControls.js"></script>
+<script src="THREEx.KeyboardState.js"></script>
+<script src="THREEx.FullScreen.js"></script>
+<script src="THREEx.WindowResize.js"></script>
+
+<!-- jQuery code to display an information button and box when clicked. -->
+<script src="jquery-1.9.1.js"></script>
+<script src="jquery-ui.js"></script>
+<link rel=stylesheet href="jquery-ui.css" />
+<link rel=stylesheet href="info.css"/>
+<script src="info.js"></script>
+<div id="infoButton"></div>
+<div id="infoBox" title="Demo Information">
+This three.js demo is part of a collection at
+<a href="http://stemkoski.github.io/Three.js/">http://stemkoski.github.io/Three.js/</a>
+</div>
+<!-- ------------------------------------------------------------ -->
+
+<div id="ThreeJS" style="position: absolute; left:0px; top:0px"></div>
+<script>
+
+var container, scene, camera, renderer, controls, stats;
+var keyboard = new THREEx.KeyboardState();
+var clock = new THREE.Clock();
+
+const light = new THREE.PointLight( 0xffffff, 5, 10000 );
+light.position.set( 0, 0, 0 );
+
+var angle = 0;
+var mirrorSphere, mirrorSphereCamera; 
+var mirrorSphere1, mirrorSphereCamera1;
+var mirrorOrbit = new THREE.Object3D();
+var mirrorSphere2, mirrorSphereCamera2;
+var mirrorOrbit2 = new THREE.Object3D();
+var sun, suntexture;
+var mercury, mercurytexture, mercurybumptexture;
+var mercuryOrbit = new THREE.Object3D();
+var venus, venustexture, venusbumptexture;
+var venusOrbit = new THREE.Object3D();
+var earth, cloudMesh, earthtexture, cloudtexture, earthbumpTexture, earthbumpTexture1;
+var earthOrbit = new THREE.Object3D();
+var moon, moontexture, moonbumpTexture;
+var moonOrbit = new THREE.Object3D();
+var mars, marstexture, marsbumptexture;
+var marsOrbit = new THREE.Object3D();
+var jupiter, jupitertexture, jupiterbumptexture;
+var jupiterOrbit = new THREE.Object3D();
+var neptun, neptuntexture;
+var neptunOrbit = new THREE.Object3D();
+var saturn, saturntexture, saturnRing, saturnRingtexture;
+var saturnOrbit = new THREE.Object3D();
+var uran, urantexture, uranRingtexture, uranRing;
+var uranOrbit = new THREE.Object3D();
+
+
+
+
+
+
+init();
+Solar();
+animate();
+
+
+		
+function init() 
+{
+
+	scene = new THREE.Scene();
+	var SCREEN_WIDTH = window.innerWidth, SCREEN_HEIGHT = window.innerHeight;
+	var VIEW_ANGLE = 45, ASPECT = SCREEN_WIDTH / SCREEN_HEIGHT, NEAR = 0.1, FAR = 20000;
+	camera = new THREE.PerspectiveCamera( VIEW_ANGLE, ASPECT, NEAR, FAR);
+	scene.add(camera);
+	camera.position.set(0,150,400);
+	camera.lookAt(scene.position);	
+	
+	if ( Detector.webgl )
+		renderer = new THREE.WebGLRenderer( {antialias:true} );
+	else
+		renderer = new THREE.CanvasRenderer(); 
+        renderer.setSize(SCREEN_WIDTH, SCREEN_HEIGHT);
+        container = document.getElementById( 'ThreeJS' );
+        container.appendChild( renderer.domElement );
+	
+
+	THREEx.WindowResize(renderer, camera);
+	THREEx.FullScreen.bindKey({ charCode : 'm'.charCodeAt(0) });
+	
+	controls = new THREE.OrbitControls( camera, renderer.domElement );
+	
+	stats = new Stats();
+	stats.domElement.style.position = 'absolute';
+	stats.domElement.style.bottom = '0px';
+	stats.domElement.style.zIndex = 100;
+	container.appendChild( stats.domElement );
+	
+
+	var light = new THREE.PointLight(0xffffff);
+	light.position.set(0,250,0);
+	scene.add(light);
+
+    const light1 = new THREE.AmbientLight( 0x404040 );
+    scene.add( light1 );
+	
+	
+	// SKYBOX/FOG
+	var materialArray = [];
+	materialArray.push(new THREE.MeshBasicMaterial( { map: THREE.ImageUtils.loadTexture( 'textures/1.jpg' ) }));
+	materialArray.push(new THREE.MeshBasicMaterial( { map: THREE.ImageUtils.loadTexture( 'textures/2.jpg' ) }));
+	materialArray.push(new THREE.MeshBasicMaterial( { map: THREE.ImageUtils.loadTexture( 'textures/4.jpg' ) }));
+	materialArray.push(new THREE.MeshBasicMaterial( { map: THREE.ImageUtils.loadTexture( 'textures/3.jpg' ) }));
+	materialArray.push(new THREE.MeshBasicMaterial( { map: THREE.ImageUtils.loadTexture( 'textures/6.jpg' ) }));
+	materialArray.push(new THREE.MeshBasicMaterial( { map: THREE.ImageUtils.loadTexture( 'textures/5.jpg' ) }));
+
+
+	for (var i = 0; i < 6; i++)
+	   materialArray[i].side = THREE.BackSide;
+	var skyboxMaterial = new THREE.MeshFaceMaterial( materialArray );
+	var skyboxGeom = new THREE.BoxGeometry( 500, 500, 500, 64, 64, 64 );
+	var skybox = new THREE.Mesh( skyboxGeom, skyboxMaterial );
+	scene.add( skybox );	
+    
+
+    var materialArray1 = [];
+	materialArray1.push(new THREE.MeshBasicMaterial( { map: THREE.ImageUtils.loadTexture( 'textures/galaxy3.jpg' ) }));
+    materialArray1.push(new THREE.MeshBasicMaterial( { map: THREE.ImageUtils.loadTexture( 'textures/galaxy3.jpg' ) }));
+    materialArray1.push(new THREE.MeshBasicMaterial( { map: THREE.ImageUtils.loadTexture( 'textures/galaxy3.jpg' ) }));
+    materialArray1.push(new THREE.MeshBasicMaterial( { map: THREE.ImageUtils.loadTexture( 'textures/galaxy3.jpg' ) }));
+    materialArray1.push(new THREE.MeshBasicMaterial( { map: THREE.ImageUtils.loadTexture( 'textures/galaxy3.jpg' ) }));
+    materialArray1.push(new THREE.MeshBasicMaterial( { map: THREE.ImageUtils.loadTexture( 'textures/galaxy3.jpg' ) }));
+
+
+	for (var i = 0; i < 6; i++)
+	   materialArray1[i].side = THREE.BackSide;
+	var skyboxMaterial1 = new THREE.MeshFaceMaterial( materialArray1 );
+	var skyboxGeom1 = new THREE.BoxGeometry( 10000, 10000, 10000, 64, 64, 64 );
+	var skybox1 = new THREE.Mesh( skyboxGeom1, skyboxMaterial1 );
+	scene.add( skybox1 );
+
+
+	
+	var sphereGeom =  new THREE.SphereGeometry( 20, 25, 160 ); 
+	mirrorSphereCamera = new THREE.CubeCamera( 0.1, 5000, 512 );
+	scene.add( mirrorSphereCamera );
+	var mirrorSphereMaterial = new THREE.MeshBasicMaterial( { envMap: mirrorSphereCamera.renderTarget } );
+	mirrorSphere = new THREE.Mesh( sphereGeom, mirrorSphereMaterial );
+	mirrorSphere.position.set(0,0,0);
+	//mirrorSphereCamera.position = mirrorSphere.position;
+	mirrorSphereCamera.position.set(0,0,0);
+	scene.add(mirrorSphere);
+
+    var sphereGeom1 =  new THREE.SphereGeometry( 10, 25, 160 ); 
+	mirrorSphereCamera1 = new THREE.CubeCamera( 0.1, 5000, 512 );
+	scene.add( mirrorSphereCamera1 );
+	var mirrorSphereMaterial1 = new THREE.MeshBasicMaterial( { envMap: mirrorSphereCamera1.renderTarget } );
+	mirrorSphere1 = new THREE.Mesh( sphereGeom1, mirrorSphereMaterial1 );
+	mirrorSphere1.position.set(70,0,0);
+	mirrorSphereCamera1.position.set(70,0,0);
+    scene.add(mirrorOrbit);
+    scene.add(mirrorSphere1);
+	mirrorOrbit.add(mirrorSphere1);
+
+    var sphereGeometry0 = new THREE.SphereGeometry(30, 70, 160);
+    var sphereMaterial0 = new THREE.MeshPhongMaterial( { opacity:0.15, color: 0xffffff, transparent:true, shininess: 1000 });
+    var sphere0 = new THREE.Mesh(sphereGeometry0, sphereMaterial0);
+    sphere0.position.set(0,0,0)
+    scene.add(sphere0);
+
+    var sphereGeometry1 = new THREE.SphereGeometry(30, 70, 160);
+    var sphereMaterial1 = new THREE.MeshLambertMaterial( { color: 0xffffff});
+    var sphere1 = new THREE.Mesh(sphereGeometry1, sphereMaterial1);
+    sphere1.position.set(100,200,0)
+    mirrorSphere.add(sphere1); ///nie widać obiektu w odbiciu
+
+    var sphereGeom2 =  new THREE.SphereGeometry( 10, 25, 160 ); 
+	mirrorSphereCamera2 = new THREE.CubeCamera( 0.1, 5000, 512 );
+	scene.add( mirrorSphereCamera2 );
+	var mirrorSphereMaterial2 = new THREE.MeshBasicMaterial( { envMap: mirrorSphereCamera2.renderTarget } );
+	mirrorSphere2 = new THREE.Mesh( sphereGeom2, mirrorSphereMaterial2 );
+	mirrorSphere2.position.set(0,90,0);
+	mirrorSphereCamera1.position = mirrorSphere2.position;
+    scene.add(mirrorOrbit2);
+    scene.add(mirrorSphere2);
+	mirrorOrbit2.add(mirrorSphere2);
+
+    sphere0.add(light)
+
+
+
+}
+
+function Solar()
+{
+
+    scene.add(mercuryOrbit);
+    scene.add(venusOrbit);
+    scene.add(earthOrbit);
+    scene.add(marsOrbit);
+    scene.add(jupiterOrbit);
+    scene.add(saturnOrbit);
+    scene.add(uranOrbit);
+    scene.add(neptunOrbit);
+    
+    
+    
+
+    
+
+
+    var sunGeometry = new THREE.SphereGeometry(500, 36, 100);
+    suntexture = new THREE.TextureLoader().load('textures/sun.jpg');
+	suntexture.repeat.set(1,1);
+    var sunMaterial = new THREE.MeshBasicMaterial( { map: suntexture } );
+    sun = new THREE.Mesh(sunGeometry, sunMaterial);
+    sun.position.set(0,0,0);
+    //sun.castShadow = true;
+    scene.add(sun);
+
+    sun.add( light );
+    //mirrorSphere.add(light)
+    
+
+     
+    var mercuryGeometry = new THREE.SphereGeometry(20, 36, 100);
+    var mercuryMaterial = new THREE.MeshPhongMaterial();
+
+    mercurytexture = new THREE.TextureLoader().load('textures/mercury.jpg');
+	mercuryMaterial.map = mercurytexture;
+    
+    mercurybumptexture = new THREE.TextureLoader().load('textures/mercurybump.jpg');
+    mercuryMaterial.bumpMap = mercurybumptexture ;
+    mercuryMaterial.bumpScale = 1;
+
+    mercury = new THREE.Mesh(mercuryGeometry, mercuryMaterial);
+    mercury.position.set(700,0,0);
+    scene.add(mercury);
+    mercuryOrbit.add(mercury);
+    mercury.rotation.y = -0.9;
+
+    
+    var venusGeometry = new THREE.SphereGeometry(60, 36, 100);
+    var venusMaterial = new THREE.MeshPhongMaterial();
+
+    venustexture = new THREE.TextureLoader().load('textures/venusmap.jpg');
+	venusMaterial.map = venustexture;
+    
+    venusbumptexture = new THREE.TextureLoader().load('textures/venusbump.jpg');
+    venusMaterial.bumpMap = venusbumptexture ;
+    venusMaterial.bumpScale = 0.7;
+
+    venus = new THREE.Mesh(venusGeometry, venusMaterial);
+    venus.position.set(900,0,0);
+    scene.add(venus);
+    venusOrbit.add(venus);
+    venus.rotation.y = -0.9;
+
+
+    
+    
+
+    var earthGeometry = new THREE.SphereGeometry(60, 36, 100);
+    var earthMaterial = new THREE.MeshPhongMaterial();
+    earthtexture = new THREE.TextureLoader().load('textures/earth1.jpg');
+    earthMaterial.map = earthtexture;
+
+    earthbumpTexture = new THREE.TextureLoader().load('textures/spect.jpg');
+    earthMaterial.bumpMap = earthbumpTexture;
+    earthMaterial.bumpScale = 0.7;
+
+    earthbumpTexture1 = new THREE.TextureLoader().load('textures/bumpearth.jpg');
+    earthMaterial.bumpMap = earthbumpTexture1;
+    earthMaterial.bumpScale = 0.9;
+
+    earth = new THREE.Mesh(earthGeometry, earthMaterial);
+    earth.position.set(1200,0,0);
+    scene.add(earth);
+    earthOrbit.add(earth);
+    earth.rotation.y = -0.9;
+
+    cloudtexture = new THREE.TextureLoader().load('textures/cloud.jpg');
+    var geometry   = new THREE.SphereGeometry(61, 36, 100)
+    var material  = new THREE.MeshPhongMaterial({
+    map         : cloudtexture,
+    side        : THREE.DoubleSide,
+    opacity     : 0.28,
+    transparent : true,
+    depthWrite  : false,
+    });
+    cloudMesh = new THREE.Mesh(geometry, material);
+    earth.add(cloudMesh);
+
+    var moonGeometry = new THREE.SphereGeometry(15, 36, 100);
+    var moonMaterial = new THREE.MeshPhongMaterial();
+    moontexture = new THREE.TextureLoader().load('textures/moon.jpg');
+    moonMaterial.map = moontexture;
+
+    moonbumpTexture = new THREE.TextureLoader().load('textures/moonbumpmap.jpg');
+    moonMaterial.bumpMap = moonbumpTexture;
+    moonMaterial.bumpScale = 0.7;
+
+    moon = new THREE.Mesh(moonGeometry, moonMaterial);
+    moon.position.set(120,0,0);
+    earth.add(moonOrbit);
+    scene.add(moon);
+    moonOrbit.add(moon);
+    moonOrbit.rotation.y = -20;
+
+
+    var marsGeometry = new THREE.SphereGeometry(50, 36, 100);
+    var marsMaterial = new THREE.MeshPhongMaterial();
+
+    marstexture = new THREE.TextureLoader().load('textures/marsmap.jpg');
+	marsMaterial.map = marstexture;
+    
+    marsbumptexture = new THREE.TextureLoader().load('textures/marsbump.jpg');
+    marsMaterial.bumpMap = marsbumptexture ;
+    marsMaterial.bumpScale = 1;
+
+    mars = new THREE.Mesh(marsGeometry, marsMaterial);
+    mars.position.set(1400,0,0);
+    scene.add(mars);
+    marsOrbit.add(mars);
+    mars.rotation.y = -0.9;
+
+    var jupiterGeometry = new THREE.SphereGeometry(130, 36, 100);
+    var jupiterMaterial = new THREE.MeshPhongMaterial();
+
+    jupitertexture = new THREE.TextureLoader().load('textures/jupitermap.jpg');
+	jupiterMaterial.map = jupitertexture;
+    
+    jupiterbumptexture = new THREE.TextureLoader().load('textures/marsbump.jpg');
+    jupiterMaterial.bumpMap = jupiterbumptexture ;
+    jupiterMaterial.bumpScale = 1;
+
+    jupiter = new THREE.Mesh(jupiterGeometry, jupiterMaterial);
+    jupiter.position.set(1900,0,0);
+    scene.add(jupiter);
+    jupiterOrbit.add(jupiter);
+    jupiter.rotation.y = -2;
+
+
+    var saturnGeometry = new THREE.SphereGeometry(90, 36, 100);
+    var saturnMaterial = new THREE.MeshPhongMaterial();
+
+    saturntexture = new THREE.TextureLoader().load('textures/saturnmap.jpg');
+	saturnMaterial.map = saturntexture;
+    
+    saturn = new THREE.Mesh(saturnGeometry, saturnMaterial);
+    saturn.position.set(2500,0,0);
+    scene.add(saturn);
+    saturnOrbit.add(saturn);
+    saturn.rotation.y = -2;
+
+    saturnRingtexture = new THREE.TextureLoader().load('textures/saturn ring.jpg');
+    var ringgeometry   = new THREE.RingGeometry(100, 160, 32);
+    var ringmaterial  = new THREE.MeshPhongMaterial({
+    map         : saturnRingtexture,
+    side        : THREE.DoubleSide,
+    opacity     : 0.9,
+    transparent : true,
+    //depthWrite  : false,
+    });
+    saturnRing = new THREE.Mesh(ringgeometry, ringmaterial);
+    saturn.add(saturnRing);
+    saturnRing.rotation.x = -0.5 * Math.PI;
+
+
+
+    var uranGeometry = new THREE.SphereGeometry(80, 36, 100);
+    var uranMaterial = new THREE.MeshPhongMaterial();
+
+    urantexture = new THREE.TextureLoader().load('textures/uranusmap.jpg');
+	uranMaterial.map = urantexture;
+    
+    uran = new THREE.Mesh(uranGeometry, uranMaterial);
+    uran.position.set(3300,0,0);
+    scene.add(uran);
+    uranOrbit.add(uran);
+    uran.rotation.y = -2;
+
+    uranRingtexture = new THREE.TextureLoader().load('textures/uranus ring.jpg');
+    var uranringgeometry   = new THREE.RingGeometry(100, 150, 32);
+    var uranringmaterial  = new THREE.MeshPhongMaterial({
+    map         : uranRingtexture,
+    side        : THREE.DoubleSide,
+    opacity     : 0.9,
+    transparent : true,
+    //depthWrite  : false,
+    });
+    uranRing = new THREE.Mesh(uranringgeometry, uranringmaterial);
+    uran.add(uranRing);
+    uranRing.rotation.x = -0.5 * Math.PI;
+
+
+
+    var neptunGeometry = new THREE.SphereGeometry(70, 36, 100);
+    var neptunMaterial = new THREE.MeshPhongMaterial();
+
+    neptuntexture = new THREE.TextureLoader().load('textures/neptunemap.jpg');
+	neptunMaterial.map = neptuntexture;
+    
+    neptun = new THREE.Mesh(neptunGeometry, neptunMaterial);
+    neptun.position.set(3800,0,0);
+    scene.add(neptun);
+    neptunOrbit.add(neptun);
+    neptun.rotation.y = -2;
+
+
+
+}
+
+
+
+function animate(obj) 
+{
+    requestAnimationFrame( animate );
+
+	var step = 0.03;
+    step += 0.03;
+    mirrorSphere.rotation.y += 0.01; 
+	sun.rotation.y += 0.003;
+    angle += 0.02;
+    mirrorOrbit.rotation.y = -angle / 1;
+    mirrorOrbit2.rotation.z = -angle / 0.6;
+    mercuryOrbit.rotation.y = -angle / 5;
+    mercury.rotation.y += 0.01;
+    venusOrbit.rotation.y = -angle / 7;
+    venus.rotation.y += 0.01;
+    earthOrbit.rotation.y = -angle / 9;
+    earth.rotation.y += 0.01;
+    cloudMesh.rotation.y -= 0.02;
+    marsOrbit.rotation.y = -angle / 10;
+    mars.rotation.y += 0.01;
+    jupiterOrbit.rotation.y = -angle / 12;
+    jupiter.rotation.y += 0.01;
+    saturnOrbit.rotation.y = -angle / 15;
+    saturn.rotation.y += 0.01;
+    uranOrbit.rotation.y = -angle / 17;
+    uran.rotation.y += 0.01;
+    neptunOrbit.rotation.y = -angle / 21;
+    neptun.rotation.y += 0.01;
+    moonOrbit.rotation.y = -angle / 0.7;
+    moon.rotation.y += 0.01;
+    
+
+
+
+
+
+	requestAnimationFrame(render);
+	render();		
+	update();
+}
+
+function update()
+{
+	if ( keyboard.pressed("z") ) 
+	{ 
+		// do something
+	}
+	
+	controls.update();
+	stats.update();
+}
+
+function render() 
+{
+
+	mirrorSphere.visible = false;
+	mirrorSphereCamera.updateCubeMap( renderer, scene );
+	mirrorSphere.visible = true;
+    mirrorSphere1.visible = false;
+	mirrorSphereCamera1.updateCubeMap( renderer, scene );
+	mirrorSphere1.visible = true;
+    mirrorSphere2.visible = false;
+	mirrorSphereCamera2.updateCubeMap( renderer, scene );
+	mirrorSphere2.visible = true;
+
+
+	renderer.render( scene, camera );
+
+}
+
+
+</script>
+
+</body>
+</html>
